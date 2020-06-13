@@ -1,7 +1,7 @@
 var config = {
 	type: Phaser.AUTO,
-	width: 1280,
-    height: 720,
+	width: 600,
+    height: 800,
 	physics: {
 		default: "arcade",
 		arcade: {
@@ -20,7 +20,9 @@ let cursors;
 let stuff;
 let floor;
 let player;
-
+var score = 0;
+var scoreText;
+var timedEvent;
 let jumping = false;
 
 console.log(game.input, this);
@@ -31,6 +33,13 @@ function preload() {
 }
 
 function create() {
+	timedEvent = this.time.addEvent({ delay: 1000, callback: () => {
+		score++;
+		}, callbackScope: this, loop: true });
+	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
+
+
+	stuff = this.physics.add.staticGroup();
 	// floor
 	floor = this.physics.add.staticGroup();
 	floor.create(640, 720, 'grass').setScale(40, 1).refreshBody();
@@ -52,10 +61,16 @@ function create() {
 
 	// add collision player-platform
 	this.physics.add.collider(player, stuff);
+
 	this.physics.add.collider(player, floor);
+
+
 }
 
 function update() {
+	scoreText.setText('Score: ' + score);
+
+
 	// L/R movement
 	if (cursors.left.isDown) {
 		player.setVelocityX(-200);
@@ -80,3 +95,4 @@ function update() {
 	}
 
 }
+
