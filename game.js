@@ -168,6 +168,7 @@ function update() {
 	if (player.y > 760) {
 		this.scene.restart();
 		music.stop();
+		score = 0;
 	}
 
 	// jumping
