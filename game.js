@@ -5,8 +5,8 @@ var config = {
 	physics: {
 		default: "arcade",
 		arcade: {
-			gravity: { y: 300 },
-		},
+			gravity: { y: 0 }
+		}
 	},
 	scene: {
 		preload: preload,
@@ -51,7 +51,7 @@ function create() {
 	stuff = this.physics.add.staticGroup();
 	// floor
 	floor = this.physics.add.staticGroup();
-	floor.create(640, 720, 'grass').setScale(40, 1).refreshBody();
+	floor.create(640, 799, 'grass').setScale(30, 1).refreshBody();
 
 	// platforms
 	stuff = this.physics.add.staticGroup();
@@ -60,13 +60,14 @@ function create() {
 	stuff.create(640, 500, 'grass').setScale(10, 1).refreshBody();
 	stuff.create(900, 350, 'grass').setScale(10, 1).refreshBody();
 
+
 	cursors = this.input.keyboard.createCursorKeys();
 
 	// player setup
 	player = this.physics.add.sprite(100, 450, 'dude');
 	player.setBounce(0.1);
 	player.setCollideWorldBounds(true);
-	player.body.setGravityY(300) // adds to global gravity
+	player.body.setGravityY(700) // adds to global gravity
 
 	// add collision player-platform
 	this.physics.add.collider(player, stuff);
@@ -116,9 +117,13 @@ function update() {
 		player.anims.play('turn', true);
 	}
 
-	for (platform of stuff.getChildren()) {
-		platform.y += 0.1;
+	stuff.children.iterate(platform => {
+		platform.y += 0.2
 		platform.refreshBody();
+	});
+
+	if (player.y > 760) {
+		this.scene.restart();
 	}
 
 	// jumping
@@ -127,7 +132,6 @@ function update() {
 		jumping = true;
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(400);
-		
 	}
 
 
