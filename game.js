@@ -30,10 +30,11 @@ var gameOverText;
 let speedY = 40;
 let platformPool;
 let activePlatforms;
+var music;
 
 function preload() {
 	this.load.image('icon', 'assets/icon.png');
-	this.load.image('grass', 'assets/grass.png');
+	this.load.image('grass', 'assets/rock.png');
 	this.load.spritesheet('dude',
 		'assets/dude.png',
 		{ frameWidth: 32, frameHeight: 60 }
@@ -46,9 +47,10 @@ function preload() {
 
 function create() {
 
-	var music = this.sound.add('theme');
+	music = this.sound.add('theme');
 
-	music.play();
+	//music.play(); //Uncomment this for music
+
 	timedEvent = this.time.addEvent({ delay: 1000, callback: () => {
 		score++;
 		}, callbackScope: this, loop: true });
