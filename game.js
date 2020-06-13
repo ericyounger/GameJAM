@@ -42,6 +42,7 @@ function preload() {
 	);
 
 	this.load.audio('theme', 'assets/theme.mp3');
+	this.load.image('particle', 'assets/particles/smoke-puff2.png');
 
 
 }
@@ -134,6 +135,17 @@ function create() {
 		frameRate: 10,
 		repeat: -1
 	});
+
+
+	//Particles
+	const p = this.add.particles('particle');
+	const e = p.createEmitter();
+
+	e.setPosition(300,800);
+	e.setBounds(0,800,1000,20);
+	e.setSpeed(300);
+	e.setBlendMode(Phaser.BlendModes.HUE);
+	e.s
 
 
 }
