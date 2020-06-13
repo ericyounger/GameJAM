@@ -1,11 +1,11 @@
 var config = {
 	type: Phaser.AUTO,
 	width: 600,
-    height: 800,
+	height: 800,
 	physics: {
 		default: "arcade",
 		arcade: {
-			gravity: { y: 300 },
+			gravity: 0,
 		},
 	},
 	scene: {
@@ -27,6 +27,7 @@ var timedEvent;
 let jumping = false;
 var gameOver = false;
 var gameOverText;
+let speedY = 40;
 console.log(game.input, this);
 
 function preload() {
@@ -41,35 +42,38 @@ function preload() {
 
 function create() {
 
-	timedEvent = this.time.addEvent({ delay: 1000, callback: () => {
-		score++;
-		}, callbackScope: this, loop: true });
+	timedEvent = this.time.addEvent({
+		delay: 1000, callback: () => {
+			score++;
+		}, callbackScope: this, loop: true
+	});
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
 
 
 
 	stuff = this.physics.add.staticGroup();
 	// floor
-	floor = this.physics.add.staticGroup();
-	floor.create(640, 720, 'grass').setScale(40, 1).refreshBody();
+	floor = this.physics.add.sprite(game.config.width / 2, game.config.height / 2 + 40, 'grass');
+	floor.setImmovable(true);
+	floor.setVelocityY(speedY);
+	floor.displayWidth = game.config.width;
+
+	console.log(game.config.speedY);
 
 	// platforms
-	stuff = this.physics.add.staticGroup();
-	stuff.create(640, 600, 'grass').setScale(10, 1).refreshBody();
-	stuff.create(250, 350, 'grass').setScale(10, 1).refreshBody();
-	stuff.create(640, 500, 'grass').setScale(10, 1).refreshBody();
-	stuff.create(900, 350, 'grass').setScale(10, 1).refreshBody();
+	platforms = this.physics.add.staticGroup();
+	platformPool = this.physics.add.staticGroup();
 
 	cursors = this.input.keyboard.createCursorKeys();
 
 	// player setup
-	player = this.physics.add.sprite(100, 450, 'dude');
+	player = this.physics.add.sprite(100, game.config.height / 2, 'dude');
 	player.setBounce(0.1);
 	player.setCollideWorldBounds(true);
 	player.body.setGravityY(300) // adds to global gravity
 
 	// add collision player-platform
-	this.physics.add.collider(player, stuff);
+	this.physics.add.collider(player, platforms);
 
 	this.physics.add.collider(player, floor);
 
@@ -78,7 +82,7 @@ function create() {
 	//Player animation
 	this.anims.create({
 		key: 'left',
-		frames: this.anims.generateFrameNumbers('dude', { start: 10, end: 19}),
+		frames: this.anims.generateFrameNumbers('dude', { start: 10, end: 19 }),
 		frameRate: 10,
 		repeat: -1
 	});
@@ -91,7 +95,7 @@ function create() {
 
 	this.anims.create({
 		key: 'right',
-		frames: this.anims.generateFrameNumbers('dude', { start: 19, end: 28}),
+		frames: this.anims.generateFrameNumbers('dude', { start: 19, end: 28 }),
 		frameRate: 10,
 		repeat: -1
 	});
@@ -116,21 +120,15 @@ function update() {
 		player.anims.play('turn', true);
 	}
 
-	for (platform of stuff.getChildren()) {
-		platform.y += 0.1;
-		platform.refreshBody();
-	}
-
 	// jumping
 	if (cursors.up.isDown && player.body.touching.down) {
-		player.setVelocityY(-500);
+		player.setVelocityY(-300);
 		jumping = true;
 	} else if (cursors.down.isDown) {
-		player.setVelocityY(400);
-		
+		player.setVelocityY(600);
+
 	}
 
 
 
 }
-
