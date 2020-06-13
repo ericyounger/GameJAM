@@ -59,8 +59,8 @@ function create() {
 
 	timedEvent = this.time.addEvent({ delay: 1000, callback: () => {
 		score++;
-		}, callbackScope: this, loop: true });
-	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
+	}, callbackScope: this, loop: true });
+	scoreText = this.add.text(16, 16, 'score: 0', { fontFamily: 'system-ui, Ubuntu, sans-serif', fontSize: '32px', fill: '#ffffff' });
 	scoreText.setDepth(100);
 
 	platformEvent = this.time.addEvent({
@@ -73,12 +73,12 @@ function create() {
 
 	activePlatforms = this.physics.add.group({
 		removeCallback: function(platform) {
-			platform.scene.platformPool.add(platform);
+			this.scene.platformPool.add(platform);
 		}
 	});
 	platformPool = this.physics.add.group({
 		removeCallback: function(platform) {
-			platform.scene.activePlatforms.add(platform);
+			this.scene.activePlatforms.add(platform);
 		}
 	});
 
@@ -91,8 +91,8 @@ function create() {
 	floor.setVelocityY(speedY);
 	floor.displayWidth = game.config.width;
 
+	// plef = this.add.tileSprite(300, 450, 128, 32, 'grass');
 
-	//addPlatform(200, 200, this);
 	addInitialPlatform(250, 200, 200, this);
 	addInitialPlatform(200, 300, 200, this);
 
@@ -229,10 +229,10 @@ function update() {
 		jumping = true;
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(600);
-
 	}
 
 	activePlatforms.children.iterate(platform => {
+		if (!platform) return;
 		if (platform.y + platform.displayHeight / 2 > game.config.height) {
 			activePlatforms.killAndHide(platform);
 			activePlatforms.remove(platform);
