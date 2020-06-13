@@ -31,6 +31,7 @@ let speedY = 40;
 let platformPool;
 let activePlatforms;
 var music;
+let pickaxe;
 
 function preload() {
 	this.load.image('icon', 'assets/icon.png');
@@ -39,6 +40,7 @@ function preload() {
 		'assets/dude.png',
 		{ frameWidth: 32, frameHeight: 60 }
 	);
+	this.load.image('pickaxe', 'assets/pickaxe.png')
 
 	this.load.audio('theme', 'assets/theme.mp3');
 
@@ -51,9 +53,11 @@ function create() {
 
 	//music.play(); //Uncomment this for music
 
-	timedEvent = this.time.addEvent({ delay: 1000, callback: () => {
-		score++;
-		}, callbackScope: this, loop: true });
+	timedEvent = this.time.addEvent({
+		delay: 1000, callback: () => {
+			score++;
+		}, callbackScope: this, loop: true
+	});
 	timedEvent = this.time.addEvent({
 		delay: 1000, callback: () => {
 			score++;
@@ -104,6 +108,10 @@ function create() {
 	this.physics.add.collider(player, floor);
 
 
+	// pickaxe creation
+	pickaxe = this.physics.add.sprite(0, 0, 'pickaxe');
+	pickaxe.alpha = 0;
+	pickaxe.body.setGravityY(1000);
 
 	//Player animation
 	this.anims.create({
@@ -189,5 +197,15 @@ function update() {
 			activePlatforms.remove(platform);
 		}
 	});
+
+	if (game.input.activePointer.isDown) {
+		pickaxe.x = player.x;
+		pickaxe.y = player.y;
+		let vector = new Phaser.Math.Vector2((game.input.activePointer.worldX - pickaxe.x), (game.input.activePointer.worldY - pickaxe.y));
+		console.log(vector.angle());
+		pickaxe.setVelocityX((Math.cos(vector.angle()) * 700) + player.body.velocity.x);
+		pickaxe.setVelocityY((Math.sin(vector.angle()) * 700) + player.body.velocity.y);
+		pickaxe.alpha = 1;
+	}
 
 }
