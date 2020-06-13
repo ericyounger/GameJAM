@@ -49,16 +49,11 @@ function create() {
 
 	music = this.sound.add('theme');
 
-	//music.play(); //Uncomment this for music
+	music.play(); //Uncomment this for music
 
 	timedEvent = this.time.addEvent({ delay: 1000, callback: () => {
 		score++;
 		}, callbackScope: this, loop: true });
-	timedEvent = this.time.addEvent({
-		delay: 1000, callback: () => {
-			score++;
-		}, callbackScope: this, loop: true
-	});
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
 
 
@@ -172,6 +167,7 @@ function update() {
 
 	if (player.y > 760) {
 		this.scene.restart();
+		music.stop();
 	}
 
 	// jumping
