@@ -58,11 +58,11 @@ function create() {
 	floor.setVelocityY(speedY);
 	floor.displayWidth = game.config.width;
 
-	console.log(game.config.speedY);
 
 	// platforms
 	platforms = this.physics.add.staticGroup();
 	platformPool = this.physics.add.staticGroup();
+
 
 	cursors = this.input.keyboard.createCursorKeys();
 
@@ -70,7 +70,7 @@ function create() {
 	player = this.physics.add.sprite(100, game.config.height / 2, 'dude');
 	player.setBounce(0.1);
 	player.setCollideWorldBounds(true);
-	player.body.setGravityY(300) // adds to global gravity
+	player.body.setGravityY(700) // adds to global gravity
 
 	// add collision player-platform
 	this.physics.add.collider(player, platforms);
@@ -118,6 +118,15 @@ function update() {
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn', true);
+	}
+
+	stuff.children.iterate(platform => {
+		platform.y += 0.2
+		platform.refreshBody();
+	});
+
+	if (player.y > 760) {
+		this.scene.restart();
 	}
 
 	// jumping
