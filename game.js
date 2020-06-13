@@ -18,6 +18,7 @@ var config = {
 let game = new Phaser.Game(config);
 let cursors;
 let stuff;
+let floor;
 let player;
 
 let jumping = false;
@@ -30,10 +31,16 @@ function preload() {
 }
 
 function create() {
-	stuff = this.physics.add.staticGroup();
 	// floor
-	stuff.create(640, 720, 'grass').setScale(40, 1).refreshBody();
+	floor = this.physics.add.staticGroup();
+	floor.create(640, 720, 'grass').setScale(40, 1).refreshBody();
+
+	// platforms
+	stuff = this.physics.add.staticGroup();
 	stuff.create(640, 600, 'grass').setScale(10, 1).refreshBody();
+	stuff.create(250, 350, 'grass').setScale(10, 1).refreshBody();
+	stuff.create(640, 500, 'grass').setScale(10, 1).refreshBody();
+	stuff.create(900, 350, 'grass').setScale(10, 1).refreshBody();
 
 	cursors = this.input.keyboard.createCursorKeys();
 
@@ -45,6 +52,7 @@ function create() {
 
 	// add collision player-platform
 	this.physics.add.collider(player, stuff);
+	this.physics.add.collider(player, floor);
 }
 
 function update() {
@@ -57,9 +65,14 @@ function update() {
 		player.setVelocityX(0);
 	}
 
+	for (platform of stuff.getChildren()) {
+		platform.y += 0.1;
+		platform.refreshBody();
+	}
+
 	// jumping
 	if (cursors.up.isDown && player.body.touching.down) {
-		player.setVelocityY(-400);
+		player.setVelocityY(-500);
 		jumping = true;
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(400);
