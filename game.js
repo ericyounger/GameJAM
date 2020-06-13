@@ -20,6 +20,7 @@ var config = {
 let game = new Phaser.Game(config);
 let cursors;
 let floor;
+let walls;
 let player;
 var score = 0;
 var scoreText;
@@ -56,6 +57,13 @@ function create() {
 		}, callbackScope: this, loop: true });
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
 
+	platformEvent = this.time.addEvent({
+		delay: 3000, callback: () => {
+			for (a of generatePlatforms()) {
+				addPlatform(a[0], a[1], this);
+			}
+		}, callbackScope: this, loop: true
+	});
 
 	activePlatforms = this.physics.add.group({
 		removeCallback: function(platform) {
@@ -68,36 +76,42 @@ function create() {
 		}
 	});
 
-	stuff = this.physics.add.staticGroup();
+	walls = this.physics.add.staticGroup();
+	walls.create(0, 400, 'grass').setScale(1,30).refreshBody();
+	walls.create(600, 400, 'grass').setScale(1,30).refreshBody();
 	// floor
 	floor = this.physics.add.sprite(game.config.width / 2, game.config.height / 2 + 40, 'grass');
 	floor.setImmovable(true);
 	floor.setVelocityY(speedY);
 	floor.displayWidth = game.config.width;
 
-	addPlatform(200, 200, this);
-	addInitialPlatform(200, 200, 200, this);
 
+	//addPlatform(200, 200, this);
+	addInitialPlatform(250, 200, 200, this);
+	addInitialPlatform(200, 300, 200, this);
 
-	// platforms
-	platforms = this.physics.add.staticGroup();
-	platformPool = this.physics.add.staticGroup();
+	for (a of generatePlatforms()) {
+		addPlatform(a[0], a[1], this);
+	}
 
+	for (a of generatePlatforms()) {
+		addInitialPlatform(a[0], 100, a[1], this);
+	}
 
 	cursors = this.input.keyboard.createCursorKeys();
 
 	// player setup
 	player = this.physics.add.sprite(100, game.config.height / 2, 'dude');
 	player.setBounce(0.1);
-	player.setCollideWorldBounds(true);
+	//player.setCollideWorldBounds(true);
 	player.body.setGravityY(700) // adds to global gravity
 
 
 	// add collision player-platform
-	this.physics.add.collider(player, platforms);
 
+	this.physics.add.collider(player, activePlatforms);
 	this.physics.add.collider(player, floor);
-
+	this.physics.add.collider(player, walls);
 
 
 	//Player animation
@@ -128,28 +142,40 @@ function addPlatform(x, width, context) {
 	if (platformPool.getLength()) {
 		let platform = platformPool.getFirst();
 		platform.x = x;
-		platform.y = platform.displayHeight / 2;
+		platform.y = -platform.displayHeight / 2;
 		platform.active = true;
 		platform.visible = true;
-		platformPool.remove(platform)
+		platformPool.remove(platform);
 	} else {
 		let floor = context.physics.add.sprite(x, game.config.height / 2 + 40, 'grass');
-		floor.y = floor.displayHeight / 2;
-		floor.setImmovable(true);
-		floor.setVelocityY(speedY);
+		floor.y = -floor.displayHeight / 2;
 		floor.displayWidth = width;
+		activePlatforms.add(floor);
+		floor.setVelocityY(speedY);
+		floor.setImmovable(true);
 	}
 }
 
 function addInitialPlatform(x, y, width, context) {
 	let floor = context.physics.add.sprite(x, y, 'grass');
-	floor.setImmovable(true);
-	floor.setVelocityY(speedY);
 	floor.displayWidth = width;
+	activePlatforms.add(floor);
+	floor.setVelocityY(speedY);
+	floor.setImmovable(true);
+}
+
+xRange = [100, 500];
+widthRange = [100, 200];
+
+function generatePlatforms() {
+	return [
+		[Phaser.Math.Between(xRange[0],xRange[1]), Phaser.Math.Between(widthRange[0],widthRange[1])]
+	]
 }
 
 function update() {
 	scoreText.setText('Score: ' + score);
+	this.physics.add.collider(player, activePlatforms);
 
 
 	// L/R movement
@@ -166,6 +192,7 @@ function update() {
 	}
 
 	if (player.y > 760) {
+		score = 0;
 		this.scene.restart();
 		music.stop();
 		score = 0;
@@ -173,7 +200,7 @@ function update() {
 
 	// jumping
 	if (cursors.up.isDown && player.body.touching.down) {
-		player.setVelocityY(-300);
+		player.setVelocityY(-430);
 		jumping = true;
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(600);
