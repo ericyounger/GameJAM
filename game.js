@@ -19,7 +19,6 @@ var config = {
 
 let game = new Phaser.Game(config);
 let cursors;
-let stuff;
 let floor;
 let player;
 var score = 0;
@@ -29,7 +28,8 @@ let jumping = false;
 var gameOver = false;
 var gameOverText;
 let speedY = 40;
-console.log(game.input, this);
+let platformPool;
+let activePlatforms;
 
 function preload() {
 	this.load.image('icon', 'assets/icon.png');
@@ -60,12 +60,26 @@ function create() {
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
 
 
+	activePlatforms = this.physics.add.group({
+		removeCallback: function(platform) {
+			platform.scene.platformPool.add(platform);
+		}
+	});
+	platformPool = this.physics.add.group({
+		removeCallback: function(platform) {
+			platform.scene.activePlatforms.add(platform);
+		}
+	});
+
 	stuff = this.physics.add.staticGroup();
 	// floor
 	floor = this.physics.add.sprite(game.config.width / 2, game.config.height / 2 + 40, 'grass');
 	floor.setImmovable(true);
 	floor.setVelocityY(speedY);
 	floor.displayWidth = game.config.width;
+
+	addPlatform(200, 200, this);
+	addInitialPlatform(200, 200, 200, this);
 
 
 	// platforms
@@ -113,6 +127,30 @@ function create() {
 
 }
 
+function addPlatform(x, width, context) {
+	if (platformPool.getLength()) {
+		let platform = platformPool.getFirst();
+		platform.x = x;
+		platform.y = platform.displayHeight / 2;
+		platform.active = true;
+		platform.visible = true;
+		platformPool.remove(platform)
+	} else {
+		let floor = context.physics.add.sprite(x, game.config.height / 2 + 40, 'grass');
+		floor.y = floor.displayHeight / 2;
+		floor.setImmovable(true);
+		floor.setVelocityY(speedY);
+		floor.displayWidth = width;
+	}
+}
+
+function addInitialPlatform(x, y, width, context) {
+	let floor = context.physics.add.sprite(x, y, 'grass');
+	floor.setImmovable(true);
+	floor.setVelocityY(speedY);
+	floor.displayWidth = width;
+}
+
 function update() {
 	scoreText.setText('Score: ' + score);
 
@@ -130,11 +168,6 @@ function update() {
 		player.anims.play('turn', true);
 	}
 
-	stuff.children.iterate(platform => {
-		platform.y += 0.2
-		platform.refreshBody();
-	});
-
 	if (player.y > 760) {
 		this.scene.restart();
 	}
@@ -148,6 +181,11 @@ function update() {
 
 	}
 
-
+	activePlatforms.children.iterate(platform => {
+		if (platform.y + platform.displayHeight / 2 > game.config.height) {
+			activePlatforms.killAndHide(platform);
+			activePlatforms.remove(platform);
+		}
+	});
 
 }
