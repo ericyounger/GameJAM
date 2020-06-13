@@ -14,6 +14,7 @@ var config = {
 		update: update
 	},
 	backgroundColor: "#dbcf8b",
+
 };
 
 let game = new Phaser.Game(config);
@@ -38,17 +39,25 @@ function preload() {
 		{ frameWidth: 32, frameHeight: 60 }
 	);
 
+	this.load.audio('theme', 'assets/theme.mp3');
+
+
 }
 
 function create() {
 
+	var music = this.sound.add('theme');
+
+	music.play();
+	timedEvent = this.time.addEvent({ delay: 1000, callback: () => {
+		score++;
+		}, callbackScope: this, loop: true });
 	timedEvent = this.time.addEvent({
 		delay: 1000, callback: () => {
 			score++;
 		}, callbackScope: this, loop: true
 	});
 	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
-
 
 
 	stuff = this.physics.add.staticGroup();
@@ -71,6 +80,7 @@ function create() {
 	player.setBounce(0.1);
 	player.setCollideWorldBounds(true);
 	player.body.setGravityY(700) // adds to global gravity
+
 
 	// add collision player-platform
 	this.physics.add.collider(player, platforms);
