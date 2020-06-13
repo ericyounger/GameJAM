@@ -33,6 +33,9 @@ let platformPool;
 let activePlatforms;
 var music;
 
+var playerParticle;
+var emitterPlayer;
+
 function preload() {
 	this.load.image('icon', 'assets/icon.png');
 	this.load.image('grass', 'assets/rock.png');
@@ -43,6 +46,7 @@ function preload() {
 
 	this.load.audio('theme', 'assets/theme.mp3');
 	this.load.image('particle', 'assets/particles/smoke-puff2.png');
+	this.load.image('particlePlayer', 'assets/particles/blue.png');
 
 
 }
@@ -146,8 +150,11 @@ function create() {
 	e.setBounds(0,800,1000,20);
 	e.setSpeed(300);
 	e.setBlendMode(Phaser.BlendModes.HUE);
-	e.s
 
+	playerParticle = this.add.particles('particlePlayer');
+	emitterPlayer = playerParticle.createEmitter();
+	emitterPlayer.setSpeed(50);
+	emitterPlayer.setScale(0.2);
 
 }
 
@@ -190,18 +197,23 @@ function update() {
 	scoreText.setText('Score: ' + score);
 	this.physics.add.collider(player, activePlatforms);
 
+	emitterPlayer.setPosition(player.x, player.y);
+
 
 	// L/R movement
 	if (cursors.left.isDown) {
 		player.setVelocityX(-200);
 		player.anims.play('left', true);
+		emitterPlayer.setScale(0.1);
 	} else if (cursors.right.isDown) {
 		player.setVelocityX(200);
 		player.anims.play('right', true);
+		emitterPlayer.setScale(0.1);
 
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn', true);
+		emitterPlayer.setScale(0);
 	}
 
 	if (player.y > 760) {
