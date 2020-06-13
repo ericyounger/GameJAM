@@ -20,6 +20,7 @@ var config = {
 let game = new Phaser.Game(config);
 let cursors;
 let floor;
+let walls;
 let player;
 var score = 0;
 var scoreText;
@@ -33,6 +34,9 @@ let activePlatforms;
 var music;
 let pickaxe;
 
+var playerParticle;
+var emitterPlayer;
+
 function preload() {
 	this.load.image('icon', 'assets/icon.png');
 	this.load.image('grass', 'assets/rock.png');
@@ -43,6 +47,8 @@ function preload() {
 	this.load.image('pickaxe', 'assets/pickaxe.png')
 
 	this.load.audio('theme', 'assets/theme.mp3');
+	this.load.image('particle', 'assets/particles/smoke-puff2.png');
+	this.load.image('particlePlayer', 'assets/particles/blue.png');
 
 
 }
@@ -51,62 +57,71 @@ function create() {
 
 	music = this.sound.add('theme');
 
-	//music.play(); //Uncomment this for music
+	music.play(); //Uncomment this for music
 
 	timedEvent = this.time.addEvent({
 		delay: 1000, callback: () => {
 			score++;
 		}, callbackScope: this, loop: true
 	});
-	timedEvent = this.time.addEvent({
-		delay: 1000, callback: () => {
-			score++;
+	scoreText = this.add.text(16, 16, 'score: 0', { fontFamily: 'system-ui, Ubuntu, sans-serif', fontSize: '32px', fill: '#ffffff' });
+	scoreText.setDepth(100);
+
+	platformEvent = this.time.addEvent({
+		delay: 3000, callback: () => {
+			for (a of generatePlatforms()) {
+				addPlatform(a[0], a[1], this);
+			}
 		}, callbackScope: this, loop: true
 	});
-	scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#ffffff' });
-
 
 	activePlatforms = this.physics.add.group({
 		removeCallback: function(platform) {
-			platform.scene.platformPool.add(platform);
+			this.scene.platformPool.add(platform);
 		}
 	});
 	platformPool = this.physics.add.group({
 		removeCallback: function(platform) {
-			platform.scene.activePlatforms.add(platform);
+			this.scene.activePlatforms.add(platform);
 		}
 	});
 
-	stuff = this.physics.add.staticGroup();
+	walls = this.physics.add.staticGroup();
+	walls.create(0, 400, 'grass').setScale(1, 30).refreshBody();
+	walls.create(600, 400, 'grass').setScale(1, 30).refreshBody();
 	// floor
 	floor = this.physics.add.sprite(game.config.width / 2, game.config.height / 2 + 40, 'grass');
 	floor.setImmovable(true);
 	floor.setVelocityY(speedY);
 	floor.displayWidth = game.config.width;
 
-	addPlatform(200, 200, this);
-	addInitialPlatform(200, 200, 200, this);
+	// plef = this.add.tileSprite(300, 450, 128, 32, 'grass');
 
+	addInitialPlatform(250, 200, 200, this);
+	addInitialPlatform(200, 300, 200, this);
 
-	// platforms
-	platforms = this.physics.add.staticGroup();
-	platformPool = this.physics.add.staticGroup();
+	for (a of generatePlatforms()) {
+		addPlatform(a[0], a[1], this);
+	}
 
+	for (a of generatePlatforms()) {
+		addInitialPlatform(a[0], 100, a[1], this);
+	}
 
 	cursors = this.input.keyboard.createCursorKeys();
 
 	// player setup
 	player = this.physics.add.sprite(100, game.config.height / 2, 'dude');
 	player.setBounce(0.1);
-	player.setCollideWorldBounds(true);
+	//player.setCollideWorldBounds(true);
 	player.body.setGravityY(700) // adds to global gravity
 
 
 	// add collision player-platform
-	this.physics.add.collider(player, platforms);
 
+	this.physics.add.collider(player, activePlatforms);
 	this.physics.add.collider(player, floor);
-
+	this.physics.add.collider(player, walls);
 
 	// pickaxe creation
 	pickaxe = this.physics.add.sprite(0, 0, 'pickaxe');
@@ -135,63 +150,97 @@ function create() {
 	});
 
 
+	//Particles
+	const p = this.add.particles('particle');
+	const e = p.createEmitter();
+
+	e.setPosition(300, 800);
+	e.setBounds(0, 800, 1000, 20);
+	e.setSpeed(300);
+	e.setBlendMode(Phaser.BlendModes.HUE);
+
+	playerParticle = this.add.particles('particlePlayer');
+	emitterPlayer = playerParticle.createEmitter();
+	emitterPlayer.setSpeed(50);
+	emitterPlayer.setScale(0.2);
+
 }
 
 function addPlatform(x, width, context) {
 	if (platformPool.getLength()) {
 		let platform = platformPool.getFirst();
 		platform.x = x;
-		platform.y = platform.displayHeight / 2;
+		platform.y = -platform.displayHeight / 2;
 		platform.active = true;
 		platform.visible = true;
-		platformPool.remove(platform)
+		platformPool.remove(platform);
 	} else {
 		let floor = context.physics.add.sprite(x, game.config.height / 2 + 40, 'grass');
-		floor.y = floor.displayHeight / 2;
-		floor.setImmovable(true);
-		floor.setVelocityY(speedY);
+		floor.y = -floor.displayHeight / 2;
 		floor.displayWidth = width;
+		activePlatforms.add(floor);
+		floor.setVelocityY(speedY);
+		floor.setImmovable(true);
 	}
 }
 
 function addInitialPlatform(x, y, width, context) {
 	let floor = context.physics.add.sprite(x, y, 'grass');
-	floor.setImmovable(true);
-	floor.setVelocityY(speedY);
 	floor.displayWidth = width;
+	activePlatforms.add(floor);
+	floor.setVelocityY(speedY);
+	floor.setImmovable(true);
+}
+
+xRange = [100, 500];
+widthRange = [100, 200];
+
+function generatePlatforms() {
+	return [
+		[Phaser.Math.Between(xRange[0], xRange[1]), Phaser.Math.Between(widthRange[0], widthRange[1])]
+	]
 }
 
 function update() {
 	scoreText.setText('Score: ' + score);
+	this.physics.add.collider(player, activePlatforms);
+
+	emitterPlayer.setPosition(player.x, player.y);
 
 
 	// L/R movement
 	if (cursors.left.isDown) {
 		player.setVelocityX(-200);
 		player.anims.play('left', true);
+		emitterPlayer.setScale(0.1);
 	} else if (cursors.right.isDown) {
 		player.setVelocityX(200);
 		player.anims.play('right', true);
+		emitterPlayer.setScale(0.1);
 
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn', true);
+		emitterPlayer.setScale(0);
 	}
 
 	if (player.y > 760) {
+		score = 0;
 		this.scene.restart();
+		music.stop();
+		score = 0;
 	}
 
 	// jumping
 	if (cursors.up.isDown && player.body.touching.down) {
-		player.setVelocityY(-300);
+		player.setVelocityY(-430);
 		jumping = true;
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(600);
-
 	}
 
 	activePlatforms.children.iterate(platform => {
+		if (!platform) return;
 		if (platform.y + platform.displayHeight / 2 > game.config.height) {
 			activePlatforms.killAndHide(platform);
 			activePlatforms.remove(platform);
