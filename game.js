@@ -169,10 +169,7 @@ function create() {
 	e.setSpeed(300);
 	e.setBlendMode(Phaser.BlendModes.HUE);
 
-	playerParticle = this.add.particles('particlePlayer');
-	emitterPlayer = playerParticle.createEmitter();
-	emitterPlayer.setSpeed(50);
-	emitterPlayer.setScale(0.2);
+
 
 }
 
@@ -238,23 +235,21 @@ function normalMovement() {
 	if (cursors.left.isDown) {
 		player.setVelocityX(-200);
 		player.anims.play('left', true);
-		emitterPlayer.setScale(0.1);
+
 	} else if (cursors.right.isDown) {
 		player.setVelocityX(200);
 		player.anims.play('right', true);
-		emitterPlayer.setScale(0.1);
+	
 	} else if(cursors.up.isDown){
-		emitterPlayer.setScale(0.1);
+		
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn', true);
-		emitterPlayer.setScale(0);
 	}
 
 	// jumping
 	if (cursors.up.isDown && player.body.touching.down) {
 		player.setVelocityY(-430);
-		emitterPlayer.setScale(0.1);
 		jumping = true;
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(600);
@@ -308,7 +303,7 @@ function update() {
 	scoreText.setText('Score: ' + score);
 	this.physics.add.collider(player, activePlatforms);
 
-	emitterPlayer.setPosition(player.x, player.y);
+
 
 	if (beingFlungByPickaxe) {
 		// don't move normally (until key press or wall hit)
