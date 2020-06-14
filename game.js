@@ -23,6 +23,7 @@ const gameConfig = {
 
 let game = new Phaser.Game(config);
 let cursors;
+let keys;
 
 let floor;
 let walls;
@@ -118,6 +119,12 @@ function create() {
 
 	// For getting cursor key input
 	cursors = this.input.keyboard.createCursorKeys();
+	keys = this.input.keyboard.addKeys({
+		up: 'W',
+		left: 'A',
+		down: 'S',
+		right: 'D',
+	});
 
 	// player setup
 	player = this.physics.add.sprite(100, game.config.height / 2, 'dude');
@@ -232,26 +239,23 @@ function generatePlatforms() {
 function normalMovement() {
 
 	// L/R movement
-	if (cursors.left.isDown) {
+	if (cursors.left.isDown || keys.left.isDown) {
 		player.setVelocityX(-200);
 		player.anims.play('left', true);
-
-	} else if (cursors.right.isDown) {
+	} else if (cursors.right.isDown || keys.right.isDown) {
 		player.setVelocityX(200);
 		player.anims.play('right', true);
-	
-	} else if(cursors.up.isDown){
-		
+	} else if(cursors.up.isDown || keys.up.isDown){
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn', true);
 	}
 
 	// jumping
-	if (cursors.up.isDown && player.body.touching.down) {
+	if ((cursors.up.isDown || keys.up.isDown) && player.body.touching.down) {
 		player.setVelocityY(-430);
 		jumping = true;
-	} else if (cursors.down.isDown) {
+	} else if (cursors.down.isDown || keys.down.isDown) {
 		player.setVelocityY(600);
 	}
 }
@@ -285,7 +289,7 @@ function createPickaxeHitHandler(context) {
 		let vector = new Phaser.Math.Vector2((pickaxe.x - player.x), (pickaxe.y - pickaxe.x));
 		player.y -= 4;
 		player.setVelocityX(Math.min(400, Math.cos(vector.angle()) * 300) + (pickaxe.x > player.x ? 100 : -100));
-		player.setVelocityY(Math.min(-600, -Math.abs(Math.sin(vector.angle()) * 600) - 200));
+		player.setVelocityY(Math.min(-400, -Math.abs(Math.sin(vector.angle()) * 600) - 200));
 		player.setGravityY(300);
 	}
 }
