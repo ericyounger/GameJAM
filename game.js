@@ -288,9 +288,9 @@ function createPickaxeHitHandler(context) {
 		// move player towards pickaxe
 		let vector = new Phaser.Math.Vector2((pickaxe.x - player.x), (pickaxe.y - pickaxe.x));
 		player.y -= 4;
-		player.setVelocityX(Math.min(400, Math.cos(vector.angle()) * 300) + (pickaxe.x > player.x ? 100 : -100));
-		player.setVelocityY(Math.min(-400, -Math.abs(Math.sin(vector.angle()) * 600) - 200));
-		player.setGravityY(300);
+		player.setVelocityX(Math.max(-400, Math.min(400, Math.cos(vector.angle()) * 300) + (pickaxe.x > player.x ? 100 : -100)));
+		player.setVelocityY(Math.max(-700, -Math.abs(Math.sin(vector.angle()) * 600) - 200));
+		player.setGravityY(500);
 	}
 }
 
@@ -311,7 +311,7 @@ function update() {
 
 	if (beingFlungByPickaxe) {
 		// don't move normally (until key press or wall hit)
-		if (cursors.up.isDown) {
+		if (cursors.left.isDown || keys.left.isDown || keys.right.isDown || cursors.right.isDown || cursors.down.isDown || keys.down.isDown) {
 			stopBeingFlung();
 		}
 	} else {
