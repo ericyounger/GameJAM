@@ -14,28 +14,39 @@ var config = {
 		update: update
 	},
 	backgroundColor: "#dbcf8b",
-
 };
+
+const gameConfig = {
+	gravity: 700,
+    speedY: 40
+}
 
 let game = new Phaser.Game(config);
 let cursors;
+
 let floor;
 let walls;
-let player;
-var score = 0;
-var scoreText;
-var timedEvent;
-let jumping = false;
-var gameOver = false;
-var gameOverText;
-let speedY = 40;
 let platformPool;
 let activePlatforms;
-var music;
-let pickaxe;
 
-var playerParticle;
-var emitterPlayer;
+let player;
+let pickaxe;
+let pickaxeCollision;
+
+let score = 0;
+let scoreText;
+let timedEvent;
+let music;
+
+let jumping = false;
+let beingFlungByPickaxe = false;
+
+let gameOver = false;
+let gameOverText;
+
+
+let playerParticle;
+let emitterPlayer;
 
 function preload() {
 	this.load.image('grass', 'assets/rock.png');
@@ -48,8 +59,6 @@ function preload() {
 	this.load.audio('theme', 'assets/theme.mp3');
 	this.load.image('particle', 'assets/particles/smoke-puff2.png');
 	this.load.image('particlePlayer', 'assets/particles/blue.png');
-
-
 }
 
 function create() {
@@ -66,6 +75,7 @@ function create() {
 	scoreText = this.add.text(16, 16, 'score: 0', { fontFamily: 'system-ui, Ubuntu, sans-serif', fontSize: '32px', fill: '#ffffff' });
 	scoreText.setDepth(100);
 
+	// Spawn platform(s) every 3 seconds
 	platformEvent = this.time.addEvent({
 		delay: 3000, callback: () => {
 			for (a of generatePlatforms()) {
@@ -74,6 +84,7 @@ function create() {
 		}, callbackScope: this, loop: true
 	});
 
+	// Platform groups - pool for reuse
 	activePlatforms = this.physics.add.group({
 		removeCallback: function(platform) {
 			this.scene.platformPool.add(platform);
@@ -85,17 +96,15 @@ function create() {
 		}
 	});
 
+	// static walls
 	walls = this.physics.add.staticGroup();
 	walls.create(0, 400, 'grass').setScale(1, 30).refreshBody();
 	walls.create(600, 400, 'grass').setScale(1, 30).refreshBody();
-	// floor
-	floor = this.physics.add.sprite(game.config.width / 2, game.config.height / 2 + 40, 'grass');
-	floor.setImmovable(true);
-	floor.setVelocityY(speedY);
-	floor.displayWidth = game.config.width;
+	// initial floor
+	addInitialPlatform(game.config.width / 2, game.config.height / 2 + 40, game.config.width, this);
 
-	// plef = this.add.tileSprite(300, 450, 128, 32, 'grass');
 
+	// Initial set of platforms
 	addInitialPlatform(250, 200, 200, this);
 	addInitialPlatform(200, 300, 200, this);
 
@@ -107,25 +116,27 @@ function create() {
 		addInitialPlatform(a[0], 100, a[1], this);
 	}
 
+	// For getting cursor key input
 	cursors = this.input.keyboard.createCursorKeys();
 
 	// player setup
 	player = this.physics.add.sprite(100, game.config.height / 2, 'dude');
 	player.setBounce(0.1);
 	//player.setCollideWorldBounds(true);
-	player.body.setGravityY(700) // adds to global gravity
+	player.body.setGravityY(gameConfig.gravity) // adds to global gravity
 
 
 	// add collision player-platform
 
-	this.physics.add.collider(player, activePlatforms);
-	this.physics.add.collider(player, floor);
-	this.physics.add.collider(player, walls);
+	this.physics.add.collider(player, activePlatforms, stopBeingFlung, null, null);
+	this.physics.add.collider(player, walls, stopBeingFlung, null, null);
 
 	// pickaxe creation
 	pickaxe = this.physics.add.sprite(0, 0, 'pickaxe');
-	pickaxe.alpha = 0;
 	pickaxe.body.setGravityY(1000);
+	pickaxe.active = false;
+	pickaxe.visible = false;
+	// collision only added on throw
 
 	//Player animation
 	this.anims.create({
@@ -178,7 +189,7 @@ function addPlatform(x, width, context) {
 		floor.y = -floor.displayHeight / 2;
 		floor.displayWidth = width;
 		activePlatforms.add(floor);
-		floor.setVelocityY(speedY);
+		floor.setVelocityY(gameConfig.speedY);
 		floor.setImmovable(true);
 	}
 }
@@ -187,25 +198,28 @@ function addInitialPlatform(x, y, width, context) {
 	let floor = context.physics.add.sprite(x, y, 'grass');
 	floor.displayWidth = width;
 	activePlatforms.add(floor);
-	floor.setVelocityY(speedY);
+	floor.setVelocityY(gameConfig.speedY);
 	floor.setImmovable(true);
 }
 
-xRange = [100, 500];
+xRange = [100, 250, 350, 500];
 widthRange = [100, 200];
+smallerWidthRange = [40, 80];
 
 function generatePlatforms() {
-	return [
-		[Phaser.Math.Between(xRange[0], xRange[1]), Phaser.Math.Between(widthRange[0], widthRange[1])]
-	]
+	if (score < 30) {
+		return [
+			[Phaser.Math.Between(xRange[0], xRange[3]), Phaser.Math.Between(widthRange[0], widthRange[1])]
+		]
+	} else {
+		return [
+			[Phaser.Math.Between(xRange[0], xRange[1]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])],
+			[Phaser.Math.Between(xRange[2], xRange[3]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])]
+		]
+	}
 }
 
-function update() {
-	scoreText.setText('Score: ' + score);
-	this.physics.add.collider(player, activePlatforms);
-
-	emitterPlayer.setPosition(player.x, player.y);
-
+function normalMovement() {
 
 	// L/R movement
 	if (cursors.left.isDown) {
@@ -216,18 +230,10 @@ function update() {
 		player.setVelocityX(200);
 		player.anims.play('right', true);
 		emitterPlayer.setScale(0.1);
-
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn', true);
 		emitterPlayer.setScale(0);
-	}
-
-	if (player.y > 760) {
-		score = 0;
-		this.scene.restart();
-		music.stop();
-		score = 0;
 	}
 
 	// jumping
@@ -237,7 +243,82 @@ function update() {
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(600);
 	}
+}
 
+function handlePickaxeThrow(context) {
+	pickaxe.active = true;
+	pickaxe.visible = true;
+	pickaxe.x = player.x;
+	pickaxe.y = player.y;
+	let vector = new Phaser.Math.Vector2((game.input.activePointer.worldX - pickaxe.x), (game.input.activePointer.worldY - pickaxe.y));
+	pickaxe.setVelocityX((Math.cos(vector.angle()) * 700) + player.body.velocity.x);
+	pickaxe.setVelocityY((Math.sin(vector.angle()) * 700) + player.body.velocity.y);
+	// add collision
+	pickaxeCollision = context.physics.add.collider(pickaxe, activePlatforms, createPickaxeHitHandler(context), null, null);
+}
+
+function removePickaxe(context) {
+	try {
+		context.physics.world.colliders.remove(pickaxeCollision)
+	} catch (e) { }
+	pickaxe.active = false;
+	pickaxe.visible = false;
+}
+
+function createPickaxeHitHandler(context) {
+	return () => {
+		if (beingFlungByPickaxe) return;
+		removePickaxe(context);
+		beingFlungByPickaxe = true;
+		// move player towards pickaxe
+		let vector = new Phaser.Math.Vector2((pickaxe.x - player.x), (pickaxe.y - pickaxe.x));
+		player.y -= 4;
+		player.setVelocityX((Math.cos(vector.angle()) * 300) + player.body.velocity.x);
+		player.setVelocityY((Math.sin(vector.angle()) * 600));
+		player.setGravityY(200);
+	}
+}
+
+function stopBeingFlung() {
+	if (beingFlungByPickaxe) {
+		beingFlungByPickaxe = false;
+		player.setVelocityX(0);
+		player.setVelocityY(0);
+		player.setGravityY(gameConfig.gravity);
+	}
+}
+
+function update() {
+	scoreText.setText('Score: ' + score);
+	this.physics.add.collider(player, activePlatforms);
+
+	emitterPlayer.setPosition(player.x, player.y);
+
+	if (beingFlungByPickaxe) {
+		// don't move normally (until key press or wall hit)
+		if (cursors.up.isDown) {
+			stopBeingFlung();
+		}
+	} else {
+		normalMovement();
+		if (pickaxe.active) {
+			if (pickaxe.y > player.y) {
+				removePickaxe(this);
+			}
+		} else if (game.input.activePointer.isDown) {
+			handlePickaxeThrow(this);
+		}
+	}
+
+	// Game over when hitting bottom
+	if (player.y > 760) {
+		score = 0;
+		this.scene.restart();
+		music.stop();
+		score = 0;
+	}
+
+	// Kill out-of-bounds platforms
 	activePlatforms.children.iterate(platform => {
 		if (!platform) return;
 		if (platform.y + platform.displayHeight / 2 > game.config.height) {
@@ -245,15 +326,4 @@ function update() {
 			activePlatforms.remove(platform);
 		}
 	});
-
-	if (game.input.activePointer.isDown) {
-		pickaxe.x = player.x;
-		pickaxe.y = player.y;
-		let vector = new Phaser.Math.Vector2((game.input.activePointer.worldX - pickaxe.x), (game.input.activePointer.worldY - pickaxe.y));
-		console.log(vector.angle());
-		pickaxe.setVelocityX((Math.cos(vector.angle()) * 700) + player.body.velocity.x);
-		pickaxe.setVelocityY((Math.sin(vector.angle()) * 700) + player.body.velocity.y);
-		pickaxe.alpha = 1;
-	}
-
 }
