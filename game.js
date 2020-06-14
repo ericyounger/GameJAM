@@ -38,7 +38,6 @@ var playerParticle;
 var emitterPlayer;
 
 function preload() {
-	this.load.image('icon', 'assets/icon.png');
 	this.load.image('grass', 'assets/rock.png');
 	this.load.spritesheet('dude',
 		'assets/dude.png',
