@@ -212,10 +212,23 @@ function generatePlatforms() {
 			[Phaser.Math.Between(xRange[0], xRange[3]), Phaser.Math.Between(widthRange[0], widthRange[1])]
 		]
 	} else {
-		return [
-			[Phaser.Math.Between(xRange[0], xRange[1]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])],
-			[Phaser.Math.Between(xRange[2], xRange[3]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])]
-		]
+		let random = Math.random();
+		if (random < 0.4) {
+			return [
+				[Phaser.Math.Between(40, xRange[0]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])],
+				[Phaser.Math.Between(xRange[1], xRange[2]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])],
+				[Phaser.Math.Between(xRange[3], 560), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])]
+			]
+		} else if (random < 0.65) {
+			return [
+				[Phaser.Math.Between(xRange[0], xRange[1]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])],
+				[Phaser.Math.Between(xRange[2], xRange[3]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])]
+			]
+		} else {
+			return [
+				[Phaser.Math.Between(xRange[1], xRange[2]), Phaser.Math.Between(smallerWidthRange[0], smallerWidthRange[1])],
+			]
+		}
 	}
 }
 
