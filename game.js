@@ -154,7 +154,7 @@ function create() {
 
 	this.anims.create({
 		key: 'right',
-		frames: this.anims.generateFrameNumbers('dude', { start: 19, end: 28 }),
+		frames: this.anims.generateFrameNumbers('dude', { start: 20, end: 28 }),
 		frameRate: 10,
 		repeat: -1
 	});
@@ -230,6 +230,8 @@ function normalMovement() {
 		player.setVelocityX(200);
 		player.anims.play('right', true);
 		emitterPlayer.setScale(0.1);
+	} else if(cursors.up.isDown){
+		emitterPlayer.setScale(0.1);
 	} else {
 		player.setVelocityX(0);
 		player.anims.play('turn', true);
@@ -239,6 +241,7 @@ function normalMovement() {
 	// jumping
 	if (cursors.up.isDown && player.body.touching.down) {
 		player.setVelocityY(-430);
+		emitterPlayer.setScale(0.1);
 		jumping = true;
 	} else if (cursors.down.isDown) {
 		player.setVelocityY(600);
